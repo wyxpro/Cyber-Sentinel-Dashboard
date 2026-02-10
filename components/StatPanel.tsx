@@ -236,7 +236,7 @@ export const SecurityZoneList: React.FC = () => {
 };
 
 export const SectionTitle: React.FC<{ title: string; extra?: React.ReactNode }> = ({ title, extra }) => (
-  <div className="relative mb-6">
+  <div className="relative mb-4">
     <div className="flex items-center justify-between relative">
       <div className="flex items-center gap-3">
         <div className="relative flex items-center">
@@ -317,7 +317,7 @@ const IsometricHexagon: React.FC<{ value: number; label: string; children: React
 
 export const VulnerabilitySection: React.FC = () => {
   return (
-    <div className="flex justify-between items-end px-4 h-48">
+    <div className="flex justify-between items-end px-4 h-40">
       <IsometricHexagon value={140} label="漏洞">
         <div className="relative w-12 h-12 flex items-center justify-center">
           <Bug size={32} strokeWidth={1.5} />

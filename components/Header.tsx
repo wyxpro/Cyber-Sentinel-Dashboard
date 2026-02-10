@@ -87,7 +87,7 @@ const Header: React.FC = () => {
       </div>
 
       {/* 2. Complex Sub-Header Divider System */}
-      <div className="relative w-full flex items-center justify-center mt-4 px-10">
+      <div className="relative w-full flex items-center justify-center mt-2 px-10">
         {/* Horizontal Line System */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-20">
           {/* Left Line */}
@@ -136,7 +136,7 @@ const Header: React.FC = () => {
       </div>
 
       {/* 3. Status Circle Row */}
-      <div className="w-full grid grid-cols-6 px-32 py-8 mt-4">
+      <div className="w-full grid grid-cols-6 px-24 py-4 mt-0">
         <StatusCircle 
           icon={<Sigma size={28} />} 
           label="全网总览" 
