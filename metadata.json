@@ -1,0 +1,7 @@
+{
+  "name": "Cyber Sentinel Dashboard",
+  "description": "A high-fidelity cybersecurity situation awareness dashboard featuring a 3D rotating globe, real-time threat visualization, and advanced data charts.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
