@@ -2,27 +2,24 @@
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sphere, Stars, Float, PerspectiveCamera } from '@react-three/drei';
-import * as THREE from 'three';
+import * as THREE_CORE from 'three';
+
+const THREE = THREE_CORE;
 
 // Constants for Three.js elements to bypass JSX typing issues
 const ThreeGroup = 'group' as any;
-const ThreeLine = 'line' as any;
-const ThreeLineSegments = 'lineSegments' as any;
-const ThreeLineBasicMaterial = 'lineBasicMaterial' as any;
 const ThreeMeshBasicMaterial = 'meshBasicMaterial' as any;
 const ThreeMeshStandardMaterial = 'meshStandardMaterial' as any;
 const ThreeAmbientLight = 'ambientLight' as any;
 const ThreePointLight = 'pointLight' as any;
 const ThreeMesh = 'mesh' as any;
 const ThreeTorusGeometry = 'torusGeometry' as any;
-const ThreeBoxGeometry = 'boxGeometry' as any;
-const ThreeTubeGeometry = 'tubeGeometry' as any;
 
 /**
  * Security Node - Blue glowing spheres as seen in the reference
  */
-const SecurityNode = ({ position }: { position: THREE.Vector3 }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+const SecurityNode = ({ position }: { position: THREE_CORE.Vector3 }) => {
+  const meshRef = useRef<THREE_CORE.Mesh>(null);
   
   useFrame((state) => {
     if (meshRef.current) {
@@ -49,9 +46,9 @@ const SecurityNode = ({ position }: { position: THREE.Vector3 }) => {
 };
 
 /**
- * Data Trail - Ribbon-like attack arc with a migrating white head
+ * Data Trail - Ribbon-like attack arc with a migrating colored dot head
  */
-const DataTrail = ({ start, end, color }: { start: THREE.Vector3, end: THREE.Vector3, color: string }) => {
+const DataTrail = ({ start, end, color }: { start: THREE_CORE.Vector3, end: THREE_CORE.Vector3, color: string }) => {
   const curve = useMemo(() => {
     const dist = start.distanceTo(end);
     // Higher mid point for more pronounced arcs like in the reference
@@ -59,31 +56,30 @@ const DataTrail = ({ start, end, color }: { start: THREE.Vector3, end: THREE.Vec
     return new THREE.QuadraticBezierCurve3(start, mid, end);
   }, [start, end]);
 
-  const headRef = useRef<THREE.Mesh>(null);
-  const tailRef = useRef<THREE.Mesh>(null);
+  const headRef = useRef<THREE_CORE.Mesh>(null);
+  const tailRef = useRef<THREE_CORE.Mesh>(null);
   const progressRef = useRef(Math.random()); // Random start offset for "migration" feel
 
   useFrame((state) => {
     if (headRef.current) {
       // Update migration progress
-      progressRef.current = (progressRef.current + 0.0025) % 1.0;
+      progressRef.current = (progressRef.current + 0.002) % 1.0;
       
       const headPos = curve.getPointAt(progressRef.current);
       headRef.current.position.copy(headPos);
       
-      // Orient the "white square" along the path
       const nextPos = curve.getPointAt(Math.min(1, progressRef.current + 0.01));
       headRef.current.lookAt(nextPos);
 
       // Tail follows slightly behind
       if (tailRef.current) {
-        const tailProgress = (progressRef.current - 0.05 + 1.0) % 1.0;
+        const tailProgress = (progressRef.current - 0.04 + 1.0) % 1.0;
         const tailPos = curve.getPointAt(tailProgress);
         tailRef.current.position.copy(tailPos);
         tailRef.current.lookAt(headPos);
         
-        // Pulse visibility
-        const s = 1 + Math.sin(state.clock.elapsedTime * 10) * 0.2;
+        // Pulse visibility and scale
+        const s = 1.2 + Math.sin(state.clock.elapsedTime * 8) * 0.3;
         headRef.current.scale.set(s, s, s);
       }
     }
@@ -98,25 +94,30 @@ const DataTrail = ({ start, end, color }: { start: THREE.Vector3, end: THREE.Vec
     <ThreeGroup>
       {/* The visible glowing arc "ribbon" */}
       <ThreeMesh geometry={tubeGeometry}>
-        <ThreeMeshBasicMaterial color={color} transparent opacity={0.25} />
+        <ThreeMeshBasicMaterial color={color} transparent opacity={0.2} />
       </ThreeMesh>
 
       {/* Faint Path Trace */}
       <ThreeMesh geometry={tubeGeometry}>
-        <ThreeMeshBasicMaterial color={color} transparent opacity={0.1} wireframe />
+        <ThreeMeshBasicMaterial color={color} transparent opacity={0.05} wireframe />
       </ThreeMesh>
 
-      {/* Migrating Header (The white block/packet) */}
+      {/* Migrating Header (The colored dot) */}
       <ThreeMesh ref={headRef}>
-        <ThreeBoxGeometry args={[0.07, 0.05, 0.1]} />
-        <ThreeMeshBasicMaterial color="#ffffff" transparent opacity={0.9} />
-        <ThreePointLight distance={0.8} intensity={2} color="#ffffff" />
+        <Sphere args={[0.045, 12, 12]}>
+          <ThreeMeshBasicMaterial color={color} transparent opacity={1} />
+        </Sphere>
+        {/* Core highlight for the dot to make it pop */}
+        <Sphere args={[0.02, 8, 8]}>
+          <ThreeMeshBasicMaterial color="#ffffff" />
+        </Sphere>
+        <ThreePointLight distance={0.8} intensity={2.5} color={color} />
       </ThreeMesh>
 
       {/* Secondary trailing pulse light */}
       <ThreeMesh ref={tailRef}>
-        <Sphere args={[0.03, 8, 8]}>
-          <ThreeMeshBasicMaterial color={color} transparent opacity={0.5} />
+        <Sphere args={[0.025, 8, 8]}>
+          <ThreeMeshBasicMaterial color={color} transparent opacity={0.4} />
         </Sphere>
         <ThreePointLight distance={0.5} intensity={1} color={color} />
       </ThreeMesh>
@@ -124,36 +125,8 @@ const DataTrail = ({ start, end, color }: { start: THREE.Vector3, end: THREE.Vec
   );
 };
 
-/**
- * Wireframe Shell - The dotted grid sphere in the background
- */
-const WireframeShell = () => {
-  const meshRef = useRef<THREE.LineSegments>(null);
-  const sphereGeom = useMemo(() => new THREE.SphereGeometry(2.6, 40, 40), []);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      // Subtle rotation for parallax effect
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.05;
-      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.05;
-    }
-  });
-
-  return (
-    <ThreeLineSegments ref={meshRef} geometry={sphereGeom}>
-      <ThreeLineBasicMaterial 
-        color="#ffffff" 
-        transparent 
-        opacity={0.06} 
-        dashSize={0.15} 
-        gapSize={0.15}
-      />
-    </ThreeLineSegments>
-  );
-};
-
 const GlobeScene = () => {
-  const globeRef = useRef<THREE.Group>(null);
+  const globeRef = useRef<THREE_CORE.Group>(null);
   
   // Use high-contrast earth textures
   const [colorMap, nightMap] = useLoader(THREE.TextureLoader, [
@@ -169,20 +142,20 @@ const GlobeScene = () => {
 
   // Generate data points for the visualization
   const { nodes, arcs } = useMemo(() => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
-    const nodes: THREE.Vector3[] = [];
-    const arcs: { start: THREE.Vector3; end: THREE.Vector3; color: string }[] = [];
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+    const nodes: THREE_CORE.Vector3[] = [];
+    const arcs: { start: THREE_CORE.Vector3; end: THREE_CORE.Vector3; color: string }[] = [];
 
-    // Reduced number of nodes for a cleaner look
-    for (let i = 0; i < 12; i++) {
+    // Fewer nodes to keep the surface clean
+    for (let i = 0; i < 10; i++) {
       const phi = (Math.random() * 0.5 + 0.15) * Math.PI;
       const theta = Math.random() * Math.PI * 2;
       const pos = new THREE.Vector3().setFromSphericalCoords(2.01, phi, theta);
       nodes.push(pos);
     }
 
-    // Reduced number of arcs (migration trails) as requested
-    for (let i = 0; i < 10; i++) {
+    // Significantly reduced number of arcs (migration trails)
+    for (let i = 0; i < 6; i++) {
       const start = nodes[Math.floor(Math.random() * nodes.length)];
       const end = nodes[Math.floor(Math.random() * nodes.length)];
       if (start.distanceTo(end) > 0.8) {
@@ -194,8 +167,7 @@ const GlobeScene = () => {
 
   return (
     <ThreeGroup>
-      {/* Dotted Grid Background */}
-      <WireframeShell />
+      {/* Outermost dotted grid shell removed as requested */}
 
       <ThreeGroup ref={globeRef}>
         {/* Main Earth Body */}
@@ -206,14 +178,14 @@ const GlobeScene = () => {
               emissiveMap={nightMap}
               emissive="#00f2ff"
               emissiveIntensity={2.8}
-              color="#0f172a" // Deep blue/slate base
+              color="#0f172a" 
               roughness={0.4}
               metalness={0.7}
             />
           </Sphere>
         </ThreeMesh>
 
-        {/* Outer Surface "Glow" Wireframe */}
+        {/* Outer Surface "Glow" Wireframe (Subtle detail near surface) */}
         <ThreeMesh>
           <Sphere args={[2.005, 64, 64]}>
             <ThreeMeshBasicMaterial color="#00f2ff" transparent opacity={0.03} wireframe />
@@ -223,7 +195,7 @@ const GlobeScene = () => {
         {/* Interactive Data Nodes */}
         {nodes.map((pos, i) => <SecurityNode key={i} position={pos} />)}
 
-        {/* Migrating Data Arcs - Now reduced for better clarity */}
+        {/* Migrating Data Arcs (Reduced to 6 trails) */}
         {arcs.map((arc, i) => <DataTrail key={i} {...arc} />)}
       </ThreeGroup>
 
@@ -232,12 +204,6 @@ const GlobeScene = () => {
          <ThreeMesh>
             <ThreeTorusGeometry args={[3.0, 0.005, 16, 100]} />
             <ThreeMeshBasicMaterial color="#3b82f6" transparent opacity={0.15} />
-         </ThreeMesh>
-      </ThreeGroup>
-      <ThreeGroup rotation={[-Math.PI / 4, Math.PI / 6, 0]}>
-         <ThreeMesh>
-            <ThreeTorusGeometry args={[3.5, 0.003, 16, 100]} />
-            <ThreeMeshBasicMaterial color="#3b82f6" transparent opacity={0.05} />
          </ThreeMesh>
       </ThreeGroup>
     </ThreeGroup>
@@ -283,14 +249,6 @@ const Globe3D: React.FC = () => {
         {/* Bottom Shade Mask */}
         <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-[#000814] to-transparent z-10" />
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes migration-sweep {
-          0% { opacity: 0.1; transform: scale(0.9); }
-          50% { opacity: 0.3; transform: scale(1); }
-          100% { opacity: 0.1; transform: scale(0.9); }
-        }
-      `}} />
     </div>
   );
 };
