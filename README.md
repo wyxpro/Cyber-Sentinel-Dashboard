@@ -8,6 +8,7 @@
 - 展示网络攻击与告警的总体态势，含 3D 地球流动、折线/柱状图、排行列表与指标卡片。
 - 当前版本使用静态数据演示，无后端依赖，适合本地快速运行与二次开发。
 - 采用 Tailwind CDN 直引样式与 Recharts/Three.js 进行图形渲染。
+<img width="2547" height="1555" alt="image" src="https://github.com/user-attachments/assets/9f765308-2bde-4a7e-b536-c7a0ecb9f8a6" />
 
 ---
 
