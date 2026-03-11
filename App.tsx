@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Globe3D from './components/Globe3D';
+import SecurityAlerts from './components/SecurityAlerts';
+import InteractiveSecurityCharts from './components/InteractiveSecurityCharts';
 import { TrendChart, trendDatasets, SectionTitle, StatBox, StatusRow, VulnerabilitySection, PredictionBarChart, AssetRankList, SecurityZoneList } from './components/StatPanel';
 
 const BottomTickerItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
@@ -88,8 +90,8 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex flex-col">
-              <SectionTitle title="脆弱性统计" />
-              <VulnerabilitySection />
+              <SectionTitle title="实时安全告警" />
+              <SecurityAlerts />
             </div>
           </div>
 
@@ -112,8 +114,8 @@ const App: React.FC = () => {
 
           <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pl-4 custom-scroll">
             <div className="flex flex-col">
-              <SectionTitle title="攻击日志预测(24H)" />
-              <PredictionBarChart />
+              <SectionTitle title="交互式安全分析" />
+              <InteractiveSecurityCharts />
             </div>
             <div className="flex flex-col">
               <SectionTitle title="受攻击资产TOP5(24H)" />
