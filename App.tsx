@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Globe3D from './components/Globe3D';
+import RealTimeAlerts from './components/RealTimeAlerts';
+import SecurityDataVisualization from './components/SecurityDataVisualization';
 import { TrendChart, trendDatasets, SectionTitle, StatBox, StatusRow, VulnerabilitySection, PredictionBarChart, AssetRankList, SecurityZoneList } from './components/StatPanel';
 
 const BottomTickerItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
@@ -47,11 +49,20 @@ const App: React.FC = () => {
       <div className="relative z-10 h-full flex flex-col">
         <Header />
 
-        <div className="flex-1 grid grid-cols-12 gap-8 overflow-hidden px-8 pb-4 mt-2">
-          <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pr-4 custom-scroll">
+        <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden px-6 pb-4 mt-2">
+          {/* 左侧区域 - 实时安全告警 + 原有内容 */}
+          <div className="col-span-3 flex flex-col space-y-4 overflow-y-auto pr-2 custom-scroll">
+            {/* 实时安全告警 */}
+            <div className="flex flex-col bg-blue-900/20 border border-cyan-500/20 rounded-lg p-4">
+              <SectionTitle title="实时安全告警" />
+              <div className="h-[380px]">
+                <RealTimeAlerts />
+              </div>
+            </div>
+
             <div className="flex flex-col">
               <SectionTitle title="告警处理(24H)" />
-              <div className="flex gap-4 mb-8">
+              <div className="flex gap-4 mb-4">
                 <StatBox label="告警量" value="0.99M" />
                 <StatBox label="告警工单" value="0" />
                 <StatBox label="告警处理率" value="0.0%" color="text-cyan-400" />
@@ -64,6 +75,38 @@ const App: React.FC = () => {
               </div>
             </div>
 
+            <div className="flex flex-col">
+              <SectionTitle title="脆弱性统计" />
+              <VulnerabilitySection />
+            </div>
+          </div>
+
+          {/* 中间区域 - 3D地球 + 安全数据可视化 */}
+          <div className="col-span-6 flex flex-col gap-4">
+            {/* 3D地球 */}
+            <div className="flex-1 relative min-h-0">
+               <Globe3D />
+               
+               <div className="absolute bottom-4 left-0 w-full px-8">
+                  <div className="absolute bottom-[10px] left-0 w-full h-[1px] border-b border-dashed border-cyan-500/30 opacity-60 z-0" />
+                  <div className="relative z-10 flex justify-between">
+                    <BottomTickerItem label="侦察" value="96.44M" />
+                    <BottomTickerItem label="渗透" value="89.55M" />
+                    <BottomTickerItem label="攻击" value="13.78M" />
+                    <BottomTickerItem label="控制" value="48.22M" />
+                    <BottomTickerItem label="破坏" value="48.74M" />
+                  </div>
+               </div>
+            </div>
+
+            {/* 安全数据可视化 */}
+            <div className="h-[320px] bg-blue-900/20 border border-cyan-500/20 rounded-lg p-4">
+              <SecurityDataVisualization />
+            </div>
+          </div>
+
+          {/* 右侧区域 - 原有内容 */}
+          <div className="col-span-3 flex flex-col space-y-4 overflow-y-auto pl-2 custom-scroll">
             <div className="flex flex-col">
               <SectionTitle 
                 title="攻击日志/告警趋势" 
@@ -87,30 +130,6 @@ const App: React.FC = () => {
               <TrendChart data={trendDatasets[timeRange]} />
             </div>
 
-            <div className="flex flex-col">
-              <SectionTitle title="脆弱性统计" />
-              <VulnerabilitySection />
-            </div>
-          </div>
-
-          <div className="col-span-6 flex flex-col items-center justify-center relative">
-             <div className="w-full h-full relative">
-               <Globe3D />
-             </div>
-
-             <div className="absolute bottom-10 left-0 w-full px-10">
-                <div className="absolute bottom-[10px] left-0 w-full h-[1px] border-b border-dashed border-cyan-500/30 opacity-60 z-0" />
-                <div className="relative z-10 flex justify-between">
-                  <BottomTickerItem label="侦察" value="96.44M" />
-                  <BottomTickerItem label="渗透" value="89.55M" />
-                  <BottomTickerItem label="攻击" value="13.78M" />
-                  <BottomTickerItem label="控制" value="48.22M" />
-                  <BottomTickerItem label="破坏" value="48.74M" />
-                </div>
-             </div>
-          </div>
-
-          <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pl-4 custom-scroll">
             <div className="flex flex-col">
               <SectionTitle title="攻击日志预测(24H)" />
               <PredictionBarChart />
