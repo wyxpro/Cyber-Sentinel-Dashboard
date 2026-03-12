@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Globe3D from './components/Globe3D';
 import { TrendChart, trendDatasets, SectionTitle, StatBox, StatusRow, VulnerabilitySection, PredictionBarChart, AssetRankList, SecurityZoneList } from './components/StatPanel';
+import { RealTimeAlertPanel, AlertSummaryBar } from './components/AlertPanel';
+import { MultiDimensionAnalysisPanel, QuickStatsRow } from './components/AnalysisPanel';
 
 const BottomTickerItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="relative flex flex-col items-center group cursor-default">
@@ -31,6 +33,7 @@ const BottomTickerItem: React.FC<{ label: string; value: string }> = ({ label, v
 const App: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleString());
   const [timeRange, setTimeRange] = useState<'day' | 'week' | 'month'>('day');
+  const [activeView, setActiveView] = useState<'overview' | 'alerts' | 'analysis'>('overview');
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleString()), 1000);
@@ -46,85 +49,203 @@ const App: React.FC = () => {
 
       <div className="relative z-10 h-full flex flex-col">
         <Header />
-
-        <div className="flex-1 grid grid-cols-12 gap-8 overflow-hidden px-8 pb-4 mt-2">
-          <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pr-4 custom-scroll">
-            <div className="flex flex-col">
-              <SectionTitle title="告警处理(24H)" />
-              <div className="flex gap-4 mb-8">
-                <StatBox label="告警量" value="0.99M" />
-                <StatBox label="告警工单" value="0" />
-                <StatBox label="告警处理率" value="0.0%" color="text-cyan-400" />
-              </div>
-              <div className="flex flex-col gap-2">
-                <StatusRow label="待处置" iconCount={8} value="0.99M" />
-                <StatusRow label="处置中" iconCount={1} value="6" />
-                <StatusRow label="已处置" iconCount={1} value="0" />
-                <StatusRow label="误报" iconCount={1} value="0" />
-              </div>
+        
+        <div className="px-8 py-2 border-b border-cyan-500/10 bg-black/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {[
+                { id: 'overview', label: '态势总览' },
+                { id: 'alerts', label: '实时告警' },
+                { id: 'analysis', label: '数据分析' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveView(tab.id as typeof activeView)}
+                  className={`
+                    px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all
+                    ${activeView === tab.id 
+                      ? 'text-cyan-400 border-b-2 border-cyan-400' 
+                      : 'text-white/40 hover:text-white/70'
+                    }
+                  `}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-
-            <div className="flex flex-col">
-              <SectionTitle 
-                title="攻击日志/告警趋势" 
-                extra={
-                  <div className="flex gap-4">
-                    <span 
-                      onClick={() => setTimeRange('day')}
-                      className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'day' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
-                    >日</span>
-                    <span 
-                      onClick={() => setTimeRange('week')}
-                      className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'week' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
-                    >周</span>
-                    <span 
-                      onClick={() => setTimeRange('month')}
-                      className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'month' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
-                    >月</span>
-                  </div>
-                } 
-              />
-              <TrendChart data={trendDatasets[timeRange]} />
-            </div>
-
-            <div className="flex flex-col">
-              <SectionTitle title="脆弱性统计" />
-              <VulnerabilitySection />
-            </div>
-          </div>
-
-          <div className="col-span-6 flex flex-col items-center justify-center relative">
-             <div className="w-full h-full relative">
-               <Globe3D />
-             </div>
-
-             <div className="absolute bottom-10 left-0 w-full px-10">
-                <div className="absolute bottom-[10px] left-0 w-full h-[1px] border-b border-dashed border-cyan-500/30 opacity-60 z-0" />
-                <div className="relative z-10 flex justify-between">
-                  <BottomTickerItem label="侦察" value="96.44M" />
-                  <BottomTickerItem label="渗透" value="89.55M" />
-                  <BottomTickerItem label="攻击" value="13.78M" />
-                  <BottomTickerItem label="控制" value="48.22M" />
-                  <BottomTickerItem label="破坏" value="48.74M" />
-                </div>
-             </div>
-          </div>
-
-          <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pl-4 custom-scroll">
-            <div className="flex flex-col">
-              <SectionTitle title="攻击日志预测(24H)" />
-              <PredictionBarChart />
-            </div>
-            <div className="flex flex-col">
-              <SectionTitle title="受攻击资产TOP5(24H)" />
-              <AssetRankList />
-            </div>
-            <div className="flex flex-col">
-              <SectionTitle title="受攻击安全域TOP5(24H)" />
-              <SecurityZoneList />
-            </div>
+            <AlertSummaryBar />
           </div>
         </div>
+
+        {activeView === 'overview' && (
+          <div className="flex-1 grid grid-cols-12 gap-8 overflow-hidden px-8 pb-4 mt-2">
+            <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pr-4 custom-scroll">
+              <div className="flex flex-col">
+                <SectionTitle title="告警处理(24H)" />
+                <div className="flex gap-4 mb-8">
+                  <StatBox label="告警量" value="0.99M" />
+                  <StatBox label="告警工单" value="0" />
+                  <StatBox label="告警处理率" value="0.0%" color="text-cyan-400" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <StatusRow label="待处置" iconCount={8} value="0.99M" />
+                  <StatusRow label="处置中" iconCount={1} value="6" />
+                  <StatusRow label="已处置" iconCount={1} value="0" />
+                  <StatusRow label="误报" iconCount={1} value="0" />
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <SectionTitle 
+                  title="攻击日志/告警趋势" 
+                  extra={
+                    <div className="flex gap-4">
+                      <span 
+                        onClick={() => setTimeRange('day')}
+                        className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'day' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
+                      >日</span>
+                      <span 
+                        onClick={() => setTimeRange('week')}
+                        className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'week' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
+                      >周</span>
+                      <span 
+                        onClick={() => setTimeRange('month')}
+                        className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'month' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
+                      >月</span>
+                    </div>
+                  } 
+                />
+                <TrendChart data={trendDatasets[timeRange]} />
+              </div>
+
+              <div className="flex flex-col">
+                <SectionTitle title="脆弱性统计" />
+                <VulnerabilitySection />
+              </div>
+            </div>
+
+            <div className="col-span-6 flex flex-col items-center justify-center relative">
+               <div className="w-full h-full relative">
+                 <Globe3D />
+               </div>
+
+               <div className="absolute bottom-10 left-0 w-full px-10">
+                  <div className="absolute bottom-[10px] left-0 w-full h-[1px] border-b border-dashed border-cyan-500/30 opacity-60 z-0" />
+                  <div className="relative z-10 flex justify-between">
+                    <BottomTickerItem label="侦察" value="96.44M" />
+                    <BottomTickerItem label="渗透" value="89.55M" />
+                    <BottomTickerItem label="攻击" value="13.78M" />
+                    <BottomTickerItem label="控制" value="48.22M" />
+                    <BottomTickerItem label="破坏" value="48.74M" />
+                  </div>
+               </div>
+            </div>
+
+            <div className="col-span-3 flex flex-col space-y-6 overflow-y-auto pl-4 custom-scroll">
+              <div className="flex flex-col">
+                <SectionTitle title="攻击日志预测(24H)" />
+                <PredictionBarChart />
+              </div>
+              <div className="flex flex-col">
+                <SectionTitle title="受攻击资产TOP5(24H)" />
+                <AssetRankList />
+              </div>
+              <div className="flex flex-col">
+                <SectionTitle title="受攻击安全域TOP5(24H)" />
+                <SecurityZoneList />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeView === 'alerts' && (
+          <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden px-8 pb-4 mt-2">
+            <div className="col-span-4 flex flex-col overflow-hidden">
+              <SectionTitle title="实时安全告警" />
+              <div className="flex-1 mt-4 overflow-hidden">
+                <RealTimeAlertPanel />
+              </div>
+            </div>
+            
+            <div className="col-span-8 flex flex-col space-y-4 overflow-hidden">
+              <QuickStatsRow />
+              
+              <div className="flex-1 grid grid-cols-2 gap-4 overflow-y-auto custom-scroll">
+                <div className="flex flex-col">
+                  <SectionTitle title="攻击日志/告警趋势" 
+                    extra={
+                      <div className="flex gap-4">
+                        <span 
+                          onClick={() => setTimeRange('day')}
+                          className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'day' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
+                        >日</span>
+                        <span 
+                          onClick={() => setTimeRange('week')}
+                          className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'week' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
+                        >周</span>
+                        <span 
+                          onClick={() => setTimeRange('month')}
+                          className={`cursor-pointer transition-all px-1 pb-1 ${timeRange === 'month' ? 'text-orange-400 border-b-2 border-orange-400' : 'text-white/40 hover:text-white'}`}
+                        >月</span>
+                      </div>
+                    } 
+                  />
+                  <div className="flex-1 mt-4">
+                    <TrendChart data={trendDatasets[timeRange]} />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col">
+                  <SectionTitle title="受攻击资产TOP5(24H)" />
+                  <div className="flex-1 mt-4">
+                    <AssetRankList />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col">
+                  <SectionTitle title="攻击日志预测(24H)" />
+                  <div className="flex-1 mt-4">
+                    <PredictionBarChart />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col">
+                  <SectionTitle title="脆弱性统计" />
+                  <div className="flex-1 mt-4">
+                    <VulnerabilitySection />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeView === 'analysis' && (
+          <div className="flex-1 grid grid-cols-12 gap-6 overflow-hidden px-8 pb-4 mt-2">
+            <div className="col-span-8 flex flex-col overflow-hidden">
+              <SectionTitle title="多维度安全数据分析" />
+              <div className="flex-1 mt-4 overflow-hidden">
+                <MultiDimensionAnalysisPanel />
+              </div>
+            </div>
+            
+            <div className="col-span-4 flex flex-col space-y-4 overflow-y-auto custom-scroll">
+              <div className="flex flex-col">
+                <SectionTitle title="3D态势感知" />
+                <div className="flex-1 mt-4 h-64">
+                  <Globe3D />
+                </div>
+              </div>
+              
+              <div className="flex flex-col">
+                <SectionTitle title="受攻击安全域TOP5(24H)" />
+                <div className="mt-4">
+                  <SecurityZoneList />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <footer className="flex justify-between items-center px-8 py-2 text-[9px] text-cyan-400/20 uppercase tracking-[0.2em] border-t border-cyan-500/5 bg-black/40">
           <div className="flex gap-6">
@@ -147,6 +268,11 @@ const App: React.FC = () => {
         }
         .custom-scroll::-webkit-scrollbar { width: 2px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.1); }
+        @keyframes pulse-subtle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        .animate-pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
       `}} />
     </div>
   );
